@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>一般社団法人 いのちを繋ぐGOODLUCK — 活動データ管理</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --blue:#0077C8; --blue-dark:#005A9E; --blue-light:rgba(0,119,200,0.12);
+  --orange:#FF6B2B; --orange-light:rgba(255,107,43,0.12);
+  --green:#22B855; --green-light:rgba(34,184,85,0.12);
+  --navy:#0F2D52;
+  --bg:#F0F7FC; --surface:#fff; --surface2:#E8F3FB; --border:#D0E6F5;
+  --primary:var(--blue); --primary-hover:var(--blue-dark);
+  --text:#1A2B3C; --muted:#5A7A96;
+  --danger:#E53E3E;
+  --shadow:0 2px 16px rgba(0,77,145,.10);
+}
+[data-theme="dark"]{
+  --bg:#091520; --surface:#112030; --surface2:#182E45; --border:#1F3D5A;
+  --primary:#38A0F5; --primary-hover:#1A8EE8;
+  --blue-light:rgba(56,160,245,.15); --orange-light:rgba(255,138,80,.15);
+  --green-light:rgba(34,184,85,.15);
+  --text:#D8EEF8; --muted:#6A9AB8;
+  --shadow:0 2px 20px rgba(0,0,0,.45);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans','Yu Gothic Medium',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.65}
+
+/* rainbow */
+.rainbow{height:4px;background:linear-gradient(to right,#E53E3E,#FF6B2B 16%,#F6C000 32%,#22B855 48%,#0077C8 64%,#6B44E8 80%,#C026D3)}
+
+/* header */
+.hdr{position:sticky;top:4px;z-index:200;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:58px;box-shadow:var(--shadow)}
+.hdr-brand{display:flex;align-items:center;gap:12px}
+.hdr-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#0077C8,#22B855);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 12px rgba(0,119,200,.4)}
+.hdr-org{font-size:10px;color:var(--muted);letter-spacing:.04em;display:block}
+.hdr-name{font-size:15px;font-weight:800;color:var(--text);display:block}
+.icon-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s;white-space:nowrap}
+.icon-btn:hover{border-color:var(--primary);color:var(--primary)}
+
+/* nav */
+.nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex;padding:0 28px;overflow-x:auto;position:sticky;top:62px;z-index:190;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav-item{padding:13px 18px;cursor:pointer;color:var(--muted);font-size:13px;font-weight:600;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.nav-item:hover{color:var(--text)}
+.nav-item.active{color:var(--primary);border-bottom-color:var(--primary)}
+
+/* main */
+.main{padding:28px;max-width:1440px;margin:0 auto}
+.tab-panel{display:none;animation:fi .2s ease}
+.tab-panel.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;box-shadow:var(--shadow)}
+.card+.card{margin-top:20px}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:16px;margin-bottom:20px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%}
+.kpi-card:nth-child(1)::before{background:#0077C8}
+.kpi-card:nth-child(2)::before{background:#22B855}
+.kpi-card:nth-child(3)::before{background:#FF6B2B}
+.kpi-card:nth-child(4)::before{background:#8B5CF6}
+.kpi-icon{font-size:26px;margin-bottom:10px}
+.kpi-lbl{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.kpi-val{font-size:34px;font-weight:800;color:var(--text);line-height:1}
+.kpi-sub{font-size:12px;color:var(--muted);margin-top:5px}
+
+/* charts */
+.chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px;margin-bottom:20px}
+.chart-ttl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:14px}
+.chart-wrap{position:relative;height:255px}
+
+/* section head */
+.sec-head{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.sec-bar{width:4px;height:22px;background:linear-gradient(to bottom,var(--blue),var(--orange));border-radius:4px;flex-shrink:0}
+.sec-ttl{font-size:17px;font-weight:800}
+.sec-sub{font-size:13px;color:var(--muted);margin-top:2px}
+
+/* form */
+.fs{margin-bottom:28px}
+.fs-ttl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--primary);margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--blue-light)}
+.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:16px}
+.fgrp{display:flex;flex-direction:column;gap:6px}
+.fgrp.full{grid-column:1/-1}
+label{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.04em}
+label .req{color:#E53E3E;margin-left:3px}
+input[type=text],input[type=date],input[type=number],select,textarea{background:var(--surface2);border:1.5px solid var(--border);color:var(--text);padding:10px 13px;border-radius:9px;font-size:14px;outline:none;width:100%;transition:border-color .2s,box-shadow .2s;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--blue-light);background:var(--surface)}
+input[readonly]{opacity:.75;cursor:default}
+textarea{resize:vertical;min-height:78px}
+select option{background:var(--surface);color:var(--text)}
+.radio-row{display:flex;gap:20px;flex-wrap:wrap;padding-top:3px}
+.rl{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--text);font-weight:500}
+.rl input[type=radio]{accent-color:var(--primary);width:16px;height:16px}
+.hint{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* info box */
+.ibox{background:var(--blue-light);border:1px solid var(--primary);border-radius:10px;padding:14px 18px;margin-bottom:16px;font-size:13px;display:flex;gap:10px;align-items:flex-start}
+.ibox .ic{font-size:18px;flex-shrink:0;margin-top:1px}
+.ibox table{font-size:12px;border-collapse:collapse}
+.ibox td{padding:3px 12px 3px 0}
+.ibox td:first-child{font-weight:700;color:var(--muted)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 22px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .2s;white-space:nowrap;font-family:inherit}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:0 4px 14px rgba(0,119,200,.35)}
+.btn-primary:hover{background:var(--primary-hover);transform:translateY(-1px)}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1.5px solid var(--border)}
+.btn-secondary:hover{border-color:var(--primary);color:var(--primary)}
+.btn-sm{background:transparent;border:1px solid var(--danger);color:var(--danger);padding:4px 10px;border-radius:7px;cursor:pointer;font-size:11px;font-weight:700;transition:all .2s;font-family:inherit}
+.btn-sm:hover{background:var(--danger);color:#fff}
+.btn-travel{background:var(--blue-light);border:1px solid var(--primary);color:var(--primary);padding:4px 10px;border-radius:7px;cursor:pointer;font-size:11px;font-weight:700;transition:all .2s;font-family:inherit;white-space:nowrap}
+.btn-travel:hover{background:var(--primary);color:#fff}
+.btn-edit{background:var(--green-light);border:1px solid var(--green);color:var(--green);padding:4px 10px;border-radius:7px;cursor:pointer;font-size:11px;font-weight:700;transition:all .2s;font-family:inherit;white-space:nowrap}
+.btn-edit:hover{background:var(--green);color:#fff}
+.edit-banner{display:none;background:var(--green-light);border:1.5px solid var(--green);border-radius:10px;padding:10px 16px;margin-bottom:16px;font-size:13px;color:var(--green);font-weight:700;align-items:center;gap:12px}
+.edit-banner.show{display:flex}
+.edit-banner button{margin-left:auto;background:transparent;border:1.5px solid var(--green);color:var(--green);border-radius:7px;padding:3px 10px;cursor:pointer;font-size:12px;font-family:inherit}
+.edit-banner button:hover{background:var(--green);color:#fff}
+.btn-row{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap}
+
+/* lecture checkboxes */
+.lec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-top:4px}
+.chk-lbl{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);font-weight:500;cursor:pointer;padding:8px 12px;border-radius:9px;border:1.5px solid var(--border);transition:all .2s;line-height:1.4}
+.chk-lbl:hover{border-color:var(--primary);background:var(--blue-light)}
+.chk-lbl input[type=checkbox]{accent-color:var(--primary);width:15px;height:15px;flex-shrink:0}
+.chk-lbl.is-other{border-style:dashed}
+.lec-other-input{margin-top:8px;display:none}
+
+/* upload */
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:22px;text-align:center;cursor:pointer;transition:all .2s;color:var(--muted);font-size:14px}
+.upload-zone:hover{border-color:var(--primary);background:var(--blue-light);color:var(--primary)}
+.upload-zone .ui{font-size:34px;margin-bottom:8px}
+.r-list{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
+.r-thumb{position:relative;width:108px}
+.r-thumb img{width:108px;height:108px;object-fit:cover;border-radius:10px;border:2px solid var(--border);display:block}
+.r-thumb .rm{position:absolute;top:-8px;right:-8px;width:22px;height:22px;background:#E53E3E;color:#fff;border:2px solid var(--surface);border-radius:50%;cursor:pointer;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.r-thumb .rlbl{font-size:10px;color:var(--muted);margin-top:4px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* amount summary */
+.amt-box{background:linear-gradient(135deg,#0077C8,#005A9E);border-radius:14px;padding:22px 26px;color:#fff;margin-top:20px}
+[data-theme="dark"] .amt-box{background:linear-gradient(135deg,#1A3A60,#0D2540)}
+.amt-box h3{font-size:12px;opacity:.8;margin-bottom:14px;text-transform:uppercase;letter-spacing:.06em}
+.amt-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.15);font-size:13px}
+.amt-row:last-of-type{border-bottom:none}
+.amt-row .lbl{opacity:.8}
+.amt-row .val{font-weight:700}
+.amt-total{display:flex;justify-content:space-between;margin-top:14px;padding-top:14px;border-top:2px solid rgba(255,255,255,.3);font-size:18px;font-weight:800}
+
+/* limit badge */
+.limit-box{background:var(--orange-light);border:1px solid var(--orange);border-radius:9px;padding:12px 16px;margin-top:12px;font-size:12px;display:none}
+.limit-box strong{color:var(--orange)}
+
+/* table */
+.tbl-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:12px}
+.fbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.fbar select,.fbar input{width:auto;min-width:140px}
+.fbar .wide{min-width:220px}
+.tw{overflow-x:auto;border:1px solid var(--border);border-radius:12px;-webkit-overflow-scrolling:touch}
+.lock-wall{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:40px 20px;text-align:center}
+.lock-icon{font-size:48px;line-height:1}
+.lock-wall p{color:var(--muted);font-size:14px}
+.lock-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
+.lock-row input[type="password"]{padding:8px 14px;border:1.5px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);font-size:15px;letter-spacing:4px;width:120px;text-align:center}
+.lock-row input[type="password"]:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--blue-light)}
+.lock-err{color:var(--danger);font-size:13px;display:none}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--surface2);padding:11px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;border-bottom:1px solid var(--border)}
+td{padding:11px 14px;border-bottom:1px solid var(--border);color:var(--text);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.b-paid{background:var(--orange-light);color:var(--orange)}
+.b-free{background:var(--blue-light);color:var(--primary)}
+.b-green{background:var(--green-light);color:var(--green)}
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty .ei{font-size:40px;margin-bottom:12px}
+
+/* toast */
+.toast{position:fixed;top:80px;right:24px;z-index:999;background:var(--green);color:#fff;padding:12px 22px;border-radius:10px;font-size:13px;font-weight:700;box-shadow:0 8px 28px rgba(34,184,85,.4);transform:translateX(200%);opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1)}
+.toast.show{transform:translateX(0);opacity:1}
+
+/* ===== RESPONSIVE ===== */
+/* Tablet */
+@media(max-width:768px){
+  .chart-grid{grid-template-columns:1fr}
+  .fg{grid-template-columns:1fr}
+  .fgrp.full{grid-column:1}
+  #car-grp .fg{grid-template-columns:1fr}
+}
+/* Mobile */
+@media(max-width:640px){
+  .rainbow{height:3px}
+  .hdr{padding:0 14px;height:52px;top:3px}
+  .hdr-org{display:none}
+  .hdr-name{font-size:13px}
+  .hdr-mark{width:30px;height:30px;font-size:16px;border-radius:8px}
+  .icon-btn{padding:5px 10px;font-size:12px}
+  .nav{padding:0 6px;top:55px}
+  .nav-item{padding:11px 12px;font-size:12px}
+  .main{padding:12px}
+  .card{padding:16px;border-radius:12px}
+  .card+.card{margin-top:12px}
+  /* KPI */
+  .kpi-grid{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+  .kpi-card{padding:14px 16px}
+  .kpi-icon{font-size:20px;margin-bottom:7px}
+  .kpi-val{font-size:26px}
+  .kpi-sub{font-size:11px}
+  /* Charts */
+  .chart-grid{grid-template-columns:1fr;gap:12px;margin-bottom:12px}
+  .chart-wrap{height:210px}
+  /* Section */
+  .sec-head{margin-bottom:14px}
+  .sec-ttl{font-size:15px}
+  .sec-sub{font-size:12px}
+  /* Forms */
+  .fg{grid-template-columns:1fr}
+  .fgrp.full{grid-column:1}
+  .lec-grid{grid-template-columns:1fr}
+  .fs{margin-bottom:20px}
+  .fs-ttl{font-size:11px}
+  /* Filter bar: stack vertically */
+  .fbar{flex-direction:column;gap:8px}
+  .fbar select,.fbar input,.fbar .wide{width:100%;min-width:0}
+  /* Table header: stack */
+  .tbl-head{flex-direction:column;align-items:flex-start;gap:10px}
+  .tbl-head .btn{width:100%;justify-content:center}
+  /* Buttons: stack full-width */
+  .btn-row{flex-direction:column;gap:10px;margin-top:18px}
+  .btn-row .btn{width:100%;justify-content:center}
+  /* Info boxes */
+  .ibox{flex-direction:column;gap:8px}
+  .ibox table{width:100%;font-size:11px}
+  .ibox td{padding:2px 6px 2px 0;word-break:break-word}
+  /* Amount summary */
+  .amt-box{padding:16px 18px}
+  .amt-total{font-size:15px}
+  /* Receipt upload */
+  .r-list{gap:8px}
+  .r-thumb{width:84px}
+  .r-thumb img{width:84px;height:84px}
+  .upload-zone{padding:14px}
+  .upload-zone .ui{font-size:26px;margin-bottom:6px}
+  /* Misc */
+  .limit-box{font-size:11px}
+  .toast{right:10px;left:10px;text-align:center}
+  #car-grp .fg{grid-template-columns:1fr}
+  #car-grp{margin-top:8px}
+}
+/* Small phone */
+@media(max-width:390px){
+  .kpi-grid{grid-template-columns:1fr}
+  .nav-item{padding:10px 10px;font-size:11px}
+  .hdr-name{font-size:12px}
+  .kpi-val{font-size:28px}
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+<div class="rainbow"></div>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-mark">🤙</div>
+    <div>
+      <span class="hdr-org">一般社団法人</span>
+      <span class="hdr-name">いのちを繋ぐGOODLUCK</span>
+    </div>
+  </div>
+  <button class="icon-btn" id="themeBtn" onclick="toggleTheme()">🌙 ダーク</button>
+</header>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-item active" onclick="showTab(this,'dashboard')">📊 ダッシュボード</div>
+  <div class="nav-item" onclick="showTab(this,'entry')">✏️ データ入力</div>
+  <div class="nav-item" onclick="showTab(this,'list')">📋 データ一覧</div>
+  <div class="nav-item" onclick="showTab(this,'travel')">🚃 旅費・交通費・日当申請</div>
+</nav>
+
+<main class="main">
+
+<!-- ===== DASHBOARD ===== -->
+<div class="tab-panel active" id="tab-dashboard">
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-icon">📋</div><div class="kpi-lbl">総実施回数</div><div class="kpi-val" id="kpi-total">0</div><div class="kpi-sub">件</div></div>
+    <div class="kpi-card"><div class="kpi-icon">👥</div><div class="kpi-lbl">総参加者数</div><div class="kpi-val" id="kpi-part">0</div><div class="kpi-sub" id="kpi-part-sub">大人 0人 / 子供 0人</div></div>
+    <div class="kpi-card"><div class="kpi-icon">💰</div><div class="kpi-lbl">有償イベント</div><div class="kpi-val" id="kpi-paid">0</div><div class="kpi-sub" id="kpi-paid-sub">件</div></div>
+    <div class="kpi-card"><div class="kpi-icon">📈</div><div class="kpi-lbl">平均参加者数</div><div class="kpi-val" id="kpi-avg">0</div><div class="kpi-sub">人 / 回</div></div>
+  </div>
+  <div class="chart-grid">
+    <div class="card"><div class="chart-ttl">月別 実施回数</div><div class="chart-wrap"><canvas id="c-monthly"></canvas></div></div>
+    <div class="card"><div class="chart-ttl">有償 / 無償 内訳</div><div class="chart-wrap"><canvas id="c-paid"></canvas></div></div>
+    <div class="card"><div class="chart-ttl">月別 参加者数推移</div><div class="chart-wrap"><canvas id="c-part"></canvas></div></div>
+    <div class="card"><div class="chart-ttl">開催場所 TOP 5</div><div class="chart-wrap"><canvas id="c-loc"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ===== DATA ENTRY ===== -->
+<div class="tab-panel" id="tab-entry">
+  <div class="card">
+    <div class="sec-head"><div class="sec-bar"></div><div><div class="sec-ttl">新規活動データ入力</div><div class="sec-sub">講習・イベントの実施記録</div></div></div>
+    <div class="edit-banner" id="editBanner">
+      ✏️ 修正モード：データを編集中です
+      <button type="button" onclick="cancelEdit()">キャンセル</button>
+    </div>
+    <form id="entryForm" onsubmit="saveEntry(event)">
+      <div class="fg">
+        <div class="fgrp"><label>実施日 <span class="req">*</span></label><input type="date" name="date" required></div>
+        <div class="fgrp"><label>開催場所 <span class="req">*</span></label><input type="text" name="location" placeholder="例：大阪市立○○中学校" required></div>
+        <div class="fgrp"><label>主催 / 依頼元 <span class="req">*</span></label><input type="text" name="organizer" placeholder="例：○○市教育委員会" required></div>
+        <div class="fgrp"><label>依頼元の連絡先</label><input type="text" name="contact" placeholder="例：06-1234-5678 / tanaka@example.com"></div>
+        <div class="fgrp"><label>担当者</label><input type="text" name="staff" placeholder="例：山田 太郎、鈴木 花子"></div>
+        <div class="fgrp"><label>参加人数（大人）</label><input type="number" name="adults" min="0" value="0"></div>
+        <div class="fgrp"><label>参加人数（子供）</label><input type="number" name="children" min="0" value="0"></div>
+        <div class="fgrp"><label>区分</label><div class="radio-row"><label class="rl"><input type="radio" name="paid" value="無償" checked> 無償</label><label class="rl"><input type="radio" name="paid" value="有償"> 有償</label></div></div>
+        <div class="fgrp"><label>所要時間</label><input type="text" name="duration" placeholder="例：90分"></div>
+        <div class="fgrp full">
+          <label>講習内容</label>
+          <div class="lec-grid">
+            <label class="chk-lbl"><input type="checkbox" name="lectures" value="グッドラックの救命講習"> グッドラックの救命講習</label>
+            <label class="chk-lbl"><input type="checkbox" name="lectures" value="レスキュークラブ"> レスキュークラブ</label>
+            <label class="chk-lbl"><input type="checkbox" name="lectures" value="海遊びアカデミー"> 海遊びアカデミー</label>
+            <label class="chk-lbl"><input type="checkbox" name="lectures" value="プールで着衣泳"> プールで着衣泳</label>
+            <label class="chk-lbl"><input type="checkbox" name="lectures" value="ワンランク上の海遊びツアー"> ワンランク上の海遊びツアー</label>
+            <label class="chk-lbl"><input type="checkbox" name="lectures" value="防災イベント企画・運営"> 防災イベント企画・運営</label>
+            <label class="chk-lbl"><input type="checkbox" name="lectures" value="いのちを繋ぐ講演会"> いのちを繋ぐ講演会</label>
+            <label class="chk-lbl is-other"><input type="checkbox" name="lectures" value="その他" onchange="toggleLecOther(this)"> その他（自由記入）</label>
+          </div>
+          <input type="text" name="lecture_other" id="lecOther" class="lec-other-input" placeholder="その他の講習内容を入力してください">
+        </div>
+        <div class="fgrp full"><label>使用教材</label><input type="text" name="materials" placeholder="例：テキストA、AEDトレーナー"></div>
+        <div class="fgrp full"><label>備考</label><textarea name="notes" placeholder="特記事項など"></textarea></div>
+      </div>
+      <div class="btn-row">
+        <button type="submit" class="btn btn-primary" id="submitBtn">💾 保存する</button>
+        <button type="button" class="btn btn-secondary" onclick="cancelEdit();document.getElementById('entryForm').reset();document.getElementById('lecOther').style.display='none'">クリア</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== DATA LIST ===== -->
+<div class="tab-panel" id="tab-list">
+  <div class="card">
+    <div class="tbl-head">
+      <div class="sec-head" style="margin:0"><div class="sec-bar"></div><div class="sec-ttl">活動データ一覧</div></div>
+      <button class="btn btn-secondary" onclick="exportCSV()">⬇ CSV</button>
+    </div>
+    <div class="fbar">
+      <select id="fy" onchange="renderTable()"><option value="">全年度</option></select>
+      <select id="fp" onchange="renderTable()"><option value="">全区分</option><option value="無償">無償</option><option value="有償">有償</option></select>
+      <input type="text" class="wide" id="fq" placeholder="🔍 場所・依頼元で検索" oninput="renderTable()">
+    </div>
+    <div class="tw">
+      <table><thead><tr><th>実施日</th><th>年度</th><th>開催場所</th><th>主催/依頼元</th><th>連絡先</th><th>担当者</th><th>講習内容</th><th>大人</th><th>子供</th><th>合計</th><th>区分</th><th>所要時間</th><th>使用教材</th><th>備考</th><th></th><th></th><th></th></tr></thead>
+      <tbody id="tbody"></tbody></table>
+      <div id="t-empty" class="empty" style="display:none"><div class="ei">📭</div><p>データがありません。「データ入力」から追加してください。</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TRAVEL FORM ===== -->
+<div class="tab-panel" id="tab-travel">
+  <div class="card">
+    <div class="sec-head"><div class="sec-bar"></div><div>
+      <div class="sec-ttl">旅費・交通費・日当申請フォーム</div>
+      <div class="sec-sub">出張旅費・日当報酬の規程（令和7年3月1日施行）に基づく申請</div>
+    </div></div>
+
+    <form id="travelForm" onsubmit="saveTravel(event)">
+
+      <!-- 1. 申請者情報 -->
+      <div class="fs">
+        <div class="fs-ttl">1. 申請者情報</div>
+        <div class="fg">
+          <div class="fgrp"><label>氏名 <span class="req">*</span></label><input type="text" name="name" placeholder="山田 太郎" required></div>
+          <div class="fgrp"><label>役職 <span class="req">*</span></label>
+            <select name="role" required onchange="onRoleChange()">
+              <option value="">選択してください</option>
+              <option value="代表理事">代表理事</option>
+              <option value="理事・監事">理事・監事</option>
+              <option value="正会員">正会員</option>
+              <option value="消防士">その他</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. 出張情報 -->
+      <div class="fs">
+        <div class="fs-ttl">2. 出張情報</div>
+        <div class="fg">
+          <div class="fgrp"><label>実施日 <span class="req">*</span></label><input type="date" name="trip_date" required></div>
+          <div class="fgrp"><label>出張の種類 <span class="req">*</span></label>
+            <div class="radio-row">
+              <label class="rl"><input type="radio" name="trip_type" value="日帰り" checked onchange="onTripChange()"> 日帰り</label>
+              <label class="rl"><input type="radio" name="trip_type" value="宿泊" onchange="onTripChange()"> 宿泊</label>
+            </div>
+          </div>
+          <div class="fgrp" id="nights-grp" style="display:none"><label>宿泊日数</label><input type="number" name="nights" min="1" value="1" oninput="calcAll()"></div>
+          <div class="fgrp"><label>活動場所 <span class="req">*</span></label><input type="text" name="venue" placeholder="例：横浜市立○○中学校" required></div>
+          <div class="fgrp full"><label>活動内容 <span class="req">*</span></label><textarea name="activity" rows="2" placeholder="例：普通救命講習（AED使用法）、対象：中学3年生 80名" required></textarea></div>
+        </div>
+      </div>
+
+      <!-- 3. 交通費 -->
+      <div class="fs">
+        <div class="fs-ttl">3. 交通費</div>
+        <div class="fg">
+          <div class="fgrp"><label>出発地（自宅起点）<span class="req">*</span></label><input type="text" name="departure" placeholder="例：神奈川県横浜市金沢区" required></div>
+          <div class="fgrp"><label>交通手段 <span class="req">*</span></label>
+            <select name="transport" required onchange="onTransportChange()">
+              <option value="">選択してください</option>
+              <option value="鉄道">鉄道（電車・新幹線）</option>
+              <option value="航空">航空（飛行機）</option>
+              <option value="船舶">船舶</option>
+              <option value="バス・タクシー">バス・タクシー</option>
+              <option value="自家用車">自家用車</option>
+              <option value="その他">その他</option>
+            </select>
+          </div>
+
+          <!-- 公共交通 -->
+          <div class="fgrp full" id="fare-grp">
+            <label>交通費（往復・実費）</label>
+            <input type="number" name="transport_fee" min="0" value="0" oninput="calcAll()">
+            <div class="hint">往復の実費合計を入力してください（鉄道：普通料金＋急行料金／グリーン除く）</div>
+          </div>
+
+          <!-- 自家用車 -->
+          <div id="car-grp" style="display:none;grid-column:1/-1">
+            <div class="fg">
+              <div class="fgrp"><label>走行距離（片道・km）</label><input type="number" name="km" min="0" step="0.1" value="0" oninput="calcCarFee()"><div class="hint">往復分を自動計算します</div></div>
+              <div class="fgrp"><label>ガソリン代（自動計算）</label><input type="number" id="gas" readonly value="0"><div class="hint">片道km × 2 × 40円（規程第11条）</div></div>
+              <div class="fgrp"><label>有料道路代金（実費・領収書必須）</label><input type="number" name="toll" min="0" value="0" oninput="calcAll()"></div>
+              <div class="fgrp"><label>駐車場代金（実費・領収書必須）</label><input type="number" name="parking" min="0" value="0" oninput="calcAll()"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 上限案内 -->
+        <div class="limit-box" id="limit-box">
+          <strong id="limit-ttl"></strong>
+          <div id="limit-detail" style="color:var(--muted);margin-top:4px"></div>
+        </div>
+      </div>
+
+      <!-- 4. 宿泊費 -->
+      <div class="fs" id="lodging-fs" style="display:none">
+        <div class="fs-ttl">4. 宿泊費</div>
+        <div class="fg">
+          <div class="fgrp"><label>宿泊費（1泊あたり・実費）</label><input type="number" name="lodging_fee" min="0" value="0" oninput="calcAll()"><div class="hint" id="lodging-hint">上限：代表理事 実費全額 / 理事・監事 5,000円 / 正会員 3,000円</div></div>
+          <div class="fgrp"><label>宿泊施設名</label><input type="text" name="hotel" placeholder="例：〇〇ビジネスホテル"></div>
+        </div>
+      </div>
+
+      <!-- 5. 日当 -->
+      <div class="fs">
+        <div class="fs-ttl" id="allowance-ttl">4. 日当</div>
+        <div class="ibox">
+          <div class="ic">💡</div>
+          <div>
+            <div style="font-weight:700;margin-bottom:6px">日当支給額（規程第13条・表１）</div>
+            <table><tr><td>代表理事</td><td>日帰り：1,000円　宿泊：3,000円/日</td></tr><tr><td>理事・監事</td><td>日帰り：1,000円　宿泊：2,000円/日</td></tr><tr><td>正会員</td><td>日帰り：1,000円　宿泊：2,000円/日</td></tr></table>
+          </div>
+        </div>
+        <div class="fg">
+          <div class="fgrp"><label>日当（自動計算）</label><input type="number" id="allowance" readonly value="0"><div class="hint">役職と出張種類から自動算出</div></div>
+        </div>
+      </div>
+
+      <!-- 6. 報酬 -->
+      <div class="fs">
+        <div class="fs-ttl" id="reward-ttl">5. 報酬（任意）</div>
+        <div class="ibox">
+          <div class="ic">📌</div>
+          <div>
+            <div style="font-weight:700;margin-bottom:6px">報酬支給額（規程第14条）</div>
+            <table>
+              <tr><td>普通救命講習（応急手当普及員）</td><td>3,000円</td></tr>
+              <tr><td>普通救命講習（資格なし）</td><td>上限 1,000円</td></tr>
+              <tr><td>水遊び安全講習（インストラクター）</td><td>上限 10,000円</td></tr>
+              <tr><td>水遊び安全講習（インストラクター以外）</td><td>参加人数に応じ上限 3,000円</td></tr>
+            </table>
+          </div>
+        </div>
+        <div class="fg">
+          <div class="fgrp"><label>担当した講習・業務</label>
+            <select name="reward_type" onchange="onRewardChange()">
+              <option value="なし">なし（報酬申請不要）</option>
+              <option value="普通救命講習（資格あり）">普通救命講習（応急手当普及員）</option>
+              <option value="普通救命講習（資格なし）">普通救命講習（資格なし）</option>
+              <option value="水遊び安全講習（インストラクター）">水遊び安全講習（インストラクター）</option>
+              <option value="水遊び安全講習（インストラクター以外）">水遊び安全講習（インストラクター以外）</option>
+              <option value="その他">その他（役員承認が必要）</option>
+            </select>
+          </div>
+          <div class="fgrp"><label>報酬金額（円）</label><input type="number" id="reward" min="0" value="0" oninput="calcAll()"><div class="hint" id="reward-hint">担当業務を選択すると上限額が表示されます</div></div>
+        </div>
+      </div>
+
+      <!-- 7. 領収書 -->
+      <div class="fs">
+        <div class="fs-ttl" id="receipt-ttl">6. 領収書・証憑書類</div>
+        <div class="fgrp full">
+          <label>領収書の写真（最大8枚・1枚5MBまで）</label>
+          <div class="upload-zone" id="upZone" onclick="document.getElementById('rInput').click()">
+            <div class="ui">📷</div>
+            <div style="font-weight:600">写真を選択 または カメラで撮影</div>
+            <div style="font-size:12px;margin-top:6px;opacity:.7">タップして追加（複数枚OK）<br>有料道路・駐車場は領収書添付必須（規程第11条）</div>
+          </div>
+          <input type="file" id="rInput" accept="image/*" multiple style="display:none" onchange="handleReceipts(event)">
+          <div class="r-list" id="rList"></div>
+        </div>
+      </div>
+
+      <!-- 8. 備考・合計 -->
+      <div class="fs">
+        <div class="fs-ttl" id="note-ttl">7. 備考・合計</div>
+        <div class="fgrp full" style="margin-bottom:16px">
+          <label>備考・特記事項</label>
+          <textarea name="notes" rows="2" placeholder="申し送り事項、特別な事情など"></textarea>
+        </div>
+
+        <div class="amt-box">
+          <h3>🧾 申請金額サマリー</h3>
+          <div class="amt-row"><span class="lbl">交通費</span><span class="val" id="s-transport">¥0</span></div>
+          <div class="amt-row"><span class="lbl">宿泊費</span><span class="val" id="s-lodging">¥0</span></div>
+          <div class="amt-row"><span class="lbl">日当</span><span class="val" id="s-allowance">¥0</span></div>
+          <div class="amt-row"><span class="lbl">報酬</span><span class="val" id="s-reward">¥0</span></div>
+          <div class="amt-total"><span>合計</span><span id="s-total">¥0</span></div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button type="submit" class="btn btn-primary">📨 申請する</button>
+        <button type="button" class="btn btn-secondary" onclick="resetTravel()">クリア</button>
+        <button type="button" class="btn btn-secondary" onclick="window.print()">🖨 印刷</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 申請一覧 -->
+  <div class="card">
+    <div class="tbl-head">
+      <div class="sec-head" style="margin:0"><div class="sec-bar"></div><div class="sec-ttl">申請一覧</div></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-secondary" id="csv-btn" onclick="exportTravelCSV()" style="display:none">⬇ CSV</button>
+        <button class="btn btn-secondary" id="lock-btn" onclick="lockTravelList()" style="display:none">🔒 ロック</button>
+      </div>
+    </div>
+    <!-- ロック画面 -->
+    <div id="travel-lock">
+      <div class="lock-wall">
+        <div class="lock-icon">🔒</div>
+        <p>申請一覧の閲覧にはパスワードが必要です</p>
+        <div class="lock-row">
+          <input type="password" id="lock-pw" maxlength="10" placeholder="••••" onkeydown="if(event.key==='Enter')unlockTravelList()">
+          <button class="btn" onclick="unlockTravelList()">確認</button>
+        </div>
+        <div class="lock-err" id="lock-err">パスワードが違います</div>
+      </div>
+    </div>
+    <!-- コンテンツ（解錠後に表示） -->
+    <div id="travel-content" style="display:none">
+      <div class="tw">
+        <table><thead><tr><th>申請日</th><th>氏名</th><th>役職</th><th>実施日</th><th>出張</th><th>活動場所</th><th>交通手段</th><th>交通費</th><th>宿泊費</th><th>日当</th><th>報酬</th><th>合計</th><th>領収書</th><th></th></tr></thead>
+        <tbody id="travel-tbody"></tbody></table>
+        <div id="tr-empty" class="empty" style="display:none"><div class="ei">🚃</div><p>申請はまだありません。</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ── STATE ──
+let entries  = JSON.parse(localStorage.getItem('gl_entries')  || '[]');
+let travels  = JSON.parse(localStorage.getItem('gl_travels')  || '[]');
+const CR = {};
+let receipts = [];
+
+// ── INIT ──
+function init() {
+  const d = new Date();
+  const fy = d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1;
+  const fyEl = document.getElementById('fy');
+  for (let y = fy+1; y >= fy-5; y--) {
+    fyEl.insertAdjacentHTML('beforeend', `<option value="${y}年度">${y}年度</option>`);
+  }
+  applyTheme(localStorage.getItem('gl_theme') || 'light');
+  initTravelLock();
+  renderDashboard(); renderTable(); renderTravelTable();
+}
+
+// ── THEME ──
+function toggleTheme() {
+  applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  renderDashboard();
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('gl_theme', t);
+  document.getElementById('themeBtn').textContent = t === 'dark' ? '☀️ ライト' : '🌙 ダーク';
+}
+
+// ── TABS ──
+function showTab(el, name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  el.classList.add('active');
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'list')      renderTable();
+  if (name === 'travel')    renderTravelTable();
+}
+
+// 日付文字列（YYYY-MM-DD）から年度を算出（4月始まり）
+function calcFY(dateStr) {
+  if (!dateStr) return '';
+  const [y, m] = dateStr.split('-').map(Number);
+  return `${m >= 4 ? y : y - 1}年度`;
+}
+
+function toggleLecOther(cb) {
+  const el = document.getElementById('lecOther');
+  el.style.display = cb.checked ? 'block' : 'none';
+  if (!cb.checked) el.value = '';
+}
+
+// ── ENTRY FORM ──
+let editingId = null;
+
+function saveEntry(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const date = fd.get('date');
+  const lecVals = fd.getAll('lectures');
+  const lecOther = fd.get('lecture_other').trim();
+  const lectures = lecVals.map(v => v === 'その他' && lecOther ? `その他（${lecOther}）` : v);
+  const data = {
+    date, year:calcFY(date),
+    location:fd.get('location').trim(), organizer:fd.get('organizer').trim(),
+    contact:fd.get('contact').trim(), staff:fd.get('staff').trim(),
+    lectures,
+    adults:+fd.get('adults')||0, children:+fd.get('children')||0,
+    paid:fd.get('paid'), duration:fd.get('duration').trim(),
+    materials:fd.get('materials').trim(), notes:fd.get('notes').trim()
+  };
+  if (editingId !== null) {
+    const idx = entries.findIndex(r => r.id === editingId);
+    if (idx !== -1) entries[idx] = { ...entries[idx], ...data };
+    toast('データを修正しました ✓');
+    cancelEdit();
+  } else {
+    entries.unshift({ id:Date.now(), ...data });
+    toast('データを保存しました ✓');
+  }
+  localStorage.setItem('gl_entries', JSON.stringify(entries));
+  e.target.reset();
+  document.getElementById('lecOther').style.display = 'none';
+  renderDashboard(); renderTable();
+}
+
+function editEntry(id) {
+  const r = entries.find(e => e.id === id);
+  if (!r) return;
+  editingId = id;
+  // タブ切替
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach((n,i) => n.classList.toggle('active', i === 1));
+  document.getElementById('tab-entry').classList.add('active');
+  // フォームに値をセット
+  const f = document.getElementById('entryForm');
+  f.reset();
+  f.querySelector('input[name="date"]').value = r.date;
+  f.querySelector('input[name="location"]').value = r.location;
+  f.querySelector('input[name="organizer"]').value = r.organizer;
+  f.querySelector('input[name="contact"]').value = r.contact || '';
+  f.querySelector('input[name="staff"]').value = r.staff || '';
+  f.querySelector('input[name="adults"]').value = r.adults;
+  f.querySelector('input[name="children"]').value = r.children;
+  f.querySelectorAll('input[name="paid"]').forEach(rb => rb.checked = rb.value === r.paid);
+  f.querySelector('input[name="duration"]').value = r.duration || '';
+  f.querySelector('input[name="materials"]').value = r.materials || '';
+  f.querySelector('textarea[name="notes"]').value = r.notes || '';
+  // チェックボックス（その他を分離）
+  const lecOtherInput = document.getElementById('lecOther');
+  lecOtherInput.style.display = 'none';
+  lecOtherInput.value = '';
+  f.querySelectorAll('input[name="lectures"]').forEach(cb => {
+    cb.checked = false;
+    if (cb.value === 'その他') {
+      const otherEntry = (r.lectures || []).find(v => v.startsWith('その他（'));
+      if (otherEntry) {
+        cb.checked = true;
+        lecOtherInput.style.display = 'block';
+        lecOtherInput.value = otherEntry.replace(/^その他（(.+)）$/, '$1');
+      }
+    } else {
+      cb.checked = (r.lectures || []).includes(cb.value);
+    }
+  });
+  // バナー・ボタン切替
+  document.getElementById('editBanner').classList.add('show');
+  document.getElementById('submitBtn').textContent = '✏️ 修正を保存する';
+  document.getElementById('tab-entry').scrollIntoView({ behavior:'smooth', block:'start' });
+  toast('修正モードで開きました');
+}
+
+function cancelEdit() {
+  editingId = null;
+  document.getElementById('editBanner').classList.remove('show');
+  document.getElementById('submitBtn').textContent = '💾 保存する';
+}
+
+// ── TRAVEL FORM: UI ──
+function onRoleChange()      { updateAllowance(); updateLimitBox(); }
+function onTripChange()      { const s = tripType()==='宿泊'; document.getElementById('nights-grp').style.display=s?'':'none'; document.getElementById('lodging-fs').style.display=s?'':'none'; updateSectionNums(); updateAllowance(); }
+function onTransportChange() { const c = transport()==='自家用車'; document.getElementById('car-grp').style.display=c?'':'none'; document.getElementById('fare-grp').style.display=c?'none':''; updateLimitBox(); calcAll(); }
+function tripType()   { return document.querySelector('input[name="trip_type"]:checked')?.value || '日帰り'; }
+function transport()  { return document.querySelector('select[name="transport"]')?.value || ''; }
+function role()       { return document.querySelector('select[name="role"]')?.value || ''; }
+
+function updateSectionNums() {
+  const s = tripType()==='宿泊';
+  document.getElementById('allowance-ttl').textContent = s ? '5. 日当' : '4. 日当';
+  document.getElementById('reward-ttl').textContent    = s ? '6. 報酬（任意）' : '5. 報酬（任意）';
+  document.getElementById('receipt-ttl').textContent   = s ? '7. 領収書・証憑書類' : '6. 領収書・証憑書類';
+  document.getElementById('note-ttl').textContent      = s ? '8. 備考・合計' : '7. 備考・合計';
+}
+
+function updateAllowance() {
+  const r = role(), t = tripType();
+  const nights = +document.querySelector('input[name="nights"]')?.value || 1;
+  let daily = 0;
+  if (r !== '消防士') {
+    if (t === '日帰り') daily = 1000;
+    else daily = (r === '代表理事') ? 3000 : 2000;
+  }
+  document.getElementById('allowance').value = (r !== '消防士' && t === '宿泊') ? daily * nights : daily;
+  calcAll();
+}
+
+function updateLimitBox() {
+  const r = role(), t = transport(), box = document.getElementById('limit-box');
+  if (!r || !t || t === '自家用車') { box.style.display='none'; return; }
+  const limits = { '代表理事':'実費全額（上限なし）', '理事・監事':'上限 3,000円（往復）', '正会員':'上限 2,000円（往復）' };
+  if (limits[r]) {
+    box.style.display='block';
+    document.getElementById('limit-ttl').textContent = `${r} の交通費支給上限`;
+    document.getElementById('limit-detail').textContent = limits[r] + '　※役員承認により上限超過可（規程第6条第2項）';
+  }
+}
+
+function calcCarFee() {
+  const km = +document.querySelector('input[name="km"]')?.value || 0;
+  document.getElementById('gas').value = Math.round(km * 2 * 40);
+  calcAll();
+}
+
+function calcAll() {
+  const isCar  = transport() === '自家用車';
+  const isStay = tripType() === '宿泊';
+  const nights = +document.querySelector('input[name="nights"]')?.value || 1;
+
+  let tf = 0;
+  if (isCar) {
+    tf = (+document.getElementById('gas').value||0)
+       + (+document.querySelector('input[name="toll"]')?.value||0)
+       + (+document.querySelector('input[name="parking"]')?.value||0);
+  } else {
+    tf = +document.querySelector('input[name="transport_fee"]')?.value||0;
+  }
+  const lf = isStay ? (+document.querySelector('input[name="lodging_fee"]')?.value||0)*nights : 0;
+  const al = +document.getElementById('allowance').value||0;
+  const rw = +document.getElementById('reward').value||0;
+  const tot = tf+lf+al+rw;
+
+  document.getElementById('s-transport').textContent  = `¥${tf.toLocaleString()}`;
+  document.getElementById('s-lodging').textContent    = `¥${lf.toLocaleString()}`;
+  document.getElementById('s-allowance').textContent  = `¥${al.toLocaleString()}`;
+  document.getElementById('s-reward').textContent     = `¥${rw.toLocaleString()}`;
+  document.getElementById('s-total').textContent      = `¥${tot.toLocaleString()}`;
+}
+
+function onRewardChange() {
+  const v = document.querySelector('select[name="reward_type"]').value;
+  const defs = { 'なし':0, '普通救命講習（資格あり）':3000, '普通救命講習（資格なし）':1000, '水遊び安全講習（インストラクター）':10000, '水遊び安全講習（インストラクター以外）':3000, 'その他':0 };
+  const hints = { 'なし':'報酬申請はありません', '普通救命講習（資格あり）':'応急手当普及員：3,000円', '普通救命講習（資格なし）':'資格なし：上限 1,000円', '水遊び安全講習（インストラクター）':'インストラクター：上限 10,000円', '水遊び安全講習（インストラクター以外）':'参加人数に応じ上限 3,000円', 'その他':'役員の承認が必要です（第14条第3項）' };
+  document.getElementById('reward').value = defs[v] ?? 0;
+  document.getElementById('reward-hint').textContent = hints[v] || '';
+  calcAll();
+}
+
+// ── RECEIPTS ──
+function handleReceipts(ev) {
+  const files = Array.from(ev.target.files);
+  if (receipts.length + files.length > 8) { alert('領収書は最大8枚までです。'); ev.target.value=''; return; }
+  files.forEach(f => {
+    if (f.size > 5*1024*1024) { alert(`${f.name} は5MBを超えています。`); return; }
+    const r = new FileReader();
+    r.onload = e => { receipts.push({ name:f.name, url:e.target.result }); renderReceipts(); };
+    r.readAsDataURL(f);
+  });
+  ev.target.value = '';
+}
+function renderReceipts() {
+  document.getElementById('rList').innerHTML = receipts.map((r,i) => `<div class="r-thumb"><img src="${r.url}" alt="${esc(r.name)}"><button type="button" class="rm" onclick="removeR(${i})">×</button><div class="rlbl">${esc(r.name)}</div></div>`).join('');
+}
+function removeR(i) { receipts.splice(i,1); renderReceipts(); }
+
+// ── SAVE TRAVEL ──
+function saveTravel(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const isCar  = fd.get('transport') === '自家用車';
+  const isStay = fd.get('trip_type') === '宿泊';
+  const nights = +fd.get('nights')||1;
+
+  let tf = 0;
+  if (isCar) tf = (+document.getElementById('gas').value||0)+(+fd.get('toll')||0)+(+fd.get('parking')||0);
+  else       tf = +fd.get('transport_fee')||0;
+  const lf = isStay ? (+fd.get('lodging_fee')||0)*nights : 0;
+  const al = +document.getElementById('allowance').value||0;
+  const rw = +document.getElementById('reward').value||0;
+
+  travels.unshift({
+    id:Date.now(), submitted:new Date().toLocaleDateString('ja-JP'),
+    name:fd.get('name').trim(), role:fd.get('role'),
+    trip_date:fd.get('trip_date'), trip_type:fd.get('trip_type'), nights:isStay?nights:0,
+    venue:fd.get('venue').trim(), activity:fd.get('activity').trim(),
+    departure:fd.get('departure').trim(), transport:fd.get('transport'),
+    km:isCar?(+fd.get('km')||0):0, gas:isCar?(+document.getElementById('gas').value||0):0,
+    toll:isCar?(+fd.get('toll')||0):0, parking:isCar?(+fd.get('parking')||0):0,
+    transport_fee:tf, lodging_fee:lf, hotel:isStay?(fd.get('hotel')||'').trim():'',
+    allowance:al, reward_type:fd.get('reward_type'), reward:rw, total:tf+lf+al+rw,
+    notes:fd.get('notes').trim(),
+    receipt_names:receipts.map(r=>r.name), receipt_urls:receipts.map(r=>r.url)
+  });
+  localStorage.setItem('gl_travels', JSON.stringify(travels));
+  toast('旅費申請を送信しました ✓');
+  e.target.reset(); receipts=[]; renderReceipts(); onTripChange(); calcAll(); renderTravelTable();
+}
+
+function resetTravel() {
+  document.getElementById('travelForm').reset();
+  receipts=[]; renderReceipts();
+  document.getElementById('allowance').value=0;
+  document.getElementById('gas').value=0;
+  onTripChange(); calcAll();
+}
+
+// ── ACTIVITY TABLE ──
+function renderTable() {
+  const fy=document.getElementById('fy').value, fp=document.getElementById('fp').value, fq=document.getElementById('fq').value.toLowerCase();
+  const data = entries.filter(r=>{
+    const yr = r.year || calcFY(r.date);
+    if(fy && yr!==fy) return false;
+    if(fp && r.paid!==fp) return false;
+    if(fq && !r.location.toLowerCase().includes(fq) && !r.organizer.toLowerCase().includes(fq) && !(r.contact||'').toLowerCase().includes(fq)) return false;
+    return true;
+  });
+  const tbody=document.getElementById('tbody'), empty=document.getElementById('t-empty');
+  if(!data.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbody.innerHTML=data.map(r=>{
+    const lec = (r.lectures||[]).join('・')||'—';
+    return `<tr>
+      <td>${r.date}</td>
+      <td>${r.year||calcFY(r.date)}</td>
+      <td>${esc(r.location)}</td>
+      <td>${esc(r.organizer)}</td>
+      <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis" title="${esc(r.contact)}">${esc(r.contact)||'—'}</td>
+      <td>${esc(r.staff)||'—'}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis" title="${esc(lec)}">${esc(lec)}</td>
+      <td style="text-align:right">${r.adults}</td>
+      <td style="text-align:right">${r.children}</td>
+      <td style="text-align:right;font-weight:700">${r.adults+r.children}</td>
+      <td><span class="badge ${r.paid==='有償'?'b-paid':'b-free'}">${r.paid}</span></td>
+      <td>${esc(r.duration)||'—'}</td>
+      <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis" title="${esc(r.materials)}">${esc(r.materials)||'—'}</td>
+      <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis" title="${esc(r.notes)}">${esc(r.notes)||'—'}</td>
+      <td><button class="btn-edit" onclick="editEntry(${r.id})">✏️ 修正</button></td>
+      <td><button class="btn-travel" onclick="prefillTravel(${r.id})">🚃 旅費申請</button></td>
+      <td><button class="btn-sm" onclick="delEntry(${r.id})">削除</button></td>
+    </tr>`;
+  }).join('');
+}
+function delEntry(id){if(!confirm('削除しますか？'))return;entries=entries.filter(r=>r.id!==id);localStorage.setItem('gl_entries',JSON.stringify(entries));renderTable();renderDashboard();}
+
+// ── PREFILL TRAVEL FROM ENTRY ──
+function prefillTravel(id) {
+  const r = entries.find(e => e.id === id);
+  if (!r) return;
+  // タブ切替
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach((n,i) => n.classList.toggle('active', i === 3));
+  document.getElementById('tab-travel').classList.add('active');
+  renderTravelTable();
+  // フォームリセット
+  document.getElementById('travelForm').reset();
+  receipts = []; renderReceipts(); onTripChange(); calcAll();
+  // 自動入力（DOMが確定してから）
+  setTimeout(() => {
+    const f = document.getElementById('travelForm');
+    f.querySelector('input[name="trip_date"]').value = r.date;
+    f.querySelector('input[name="venue"]').value = r.location;
+    const lecStr = (r.lectures && r.lectures.length) ? r.lectures.join('、') : '';
+    const activityLines = [];
+    if (r.organizer) activityLines.push(`【依頼元】${r.organizer}`);
+    if (lecStr) activityLines.push(`【講習内容】${lecStr}`);
+    f.querySelector('textarea[name="activity"]').value = activityLines.join('\n');
+    document.getElementById('tab-travel').scrollIntoView({ behavior:'smooth', block:'start' });
+    toast('活動データを自動入力しました ✓');
+  }, 80);
+}
+
+// ── TRAVEL TABLE ──
+// ── 申請一覧 パスワード管理 ──
+const TRAVEL_PW = '0014';
+function unlockTravelList() {
+  const pw = document.getElementById('lock-pw').value;
+  const err = document.getElementById('lock-err');
+  if (pw !== TRAVEL_PW) {
+    err.style.display = 'block';
+    document.getElementById('lock-pw').value = '';
+    document.getElementById('lock-pw').focus();
+    return;
+  }
+  err.style.display = 'none';
+  sessionStorage.setItem('gl_travel_unlocked', '1');
+  document.getElementById('travel-lock').style.display = 'none';
+  document.getElementById('travel-content').style.display = 'block';
+  document.getElementById('csv-btn').style.display = '';
+  document.getElementById('lock-btn').style.display = '';
+  renderTravelTable();
+}
+function lockTravelList() {
+  sessionStorage.removeItem('gl_travel_unlocked');
+  document.getElementById('lock-pw').value = '';
+  document.getElementById('lock-err').style.display = 'none';
+  document.getElementById('travel-lock').style.display = 'block';
+  document.getElementById('travel-content').style.display = 'none';
+  document.getElementById('csv-btn').style.display = 'none';
+  document.getElementById('lock-btn').style.display = 'none';
+}
+function initTravelLock() {
+  if (sessionStorage.getItem('gl_travel_unlocked') === '1') {
+    document.getElementById('travel-lock').style.display = 'none';
+    document.getElementById('travel-content').style.display = 'block';
+    document.getElementById('csv-btn').style.display = '';
+    document.getElementById('lock-btn').style.display = '';
+  }
+}
+
+function renderTravelTable() {
+  if (sessionStorage.getItem('gl_travel_unlocked') !== '1') return;
+  const tbody=document.getElementById('travel-tbody'), empty=document.getElementById('tr-empty');
+  if(!travels.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbody.innerHTML=travels.map(r=>`<tr><td>${r.submitted}</td><td>${esc(r.name)}</td><td><span class="badge b-green">${r.role}</span></td><td>${r.trip_date}</td><td>${r.trip_type}${r.nights?`(${r.nights}泊)`:''}</td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${esc(r.venue)}">${esc(r.venue)}</td><td>${r.transport}</td><td style="text-align:right">¥${r.transport_fee.toLocaleString()}</td><td style="text-align:right">¥${r.lodging_fee.toLocaleString()}</td><td style="text-align:right">¥${r.allowance.toLocaleString()}</td><td style="text-align:right">¥${r.reward.toLocaleString()}</td><td style="text-align:right;font-weight:700">¥${r.total.toLocaleString()}</td><td>${r.receipt_names&&r.receipt_names.length?`<span class="badge b-green">${r.receipt_names.length}枚</span>`:'—'}</td><td><button class="btn-sm" onclick="delTravel(${r.id})">削除</button></td></tr>`).join('');
+}
+function delTravel(id){if(!confirm('削除しますか？'))return;travels=travels.filter(r=>r.id!==id);localStorage.setItem('gl_travels',JSON.stringify(travels));renderTravelTable();}
+
+// ── CSV ──
+function exportCSV(){
+  const h=['実施日','年度','開催場所','主催/依頼元','依頼元の連絡先','担当者','講習内容','大人','子供','合計','区分','所要時間','使用教材','備考'];
+  const rows=entries.map(r=>[r.date,r.year||calcFY(r.date),r.location,r.organizer,r.contact||'',r.staff||'',(r.lectures||[]).join('・'),r.adults,r.children,r.adults+r.children,r.paid,r.duration,r.materials,r.notes].map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(','));
+  dl('﻿'+[h.join(','),...rows].join('\n'), `活動データ_${td()}.csv`);
+}
+function exportTravelCSV(){
+  if (sessionStorage.getItem('gl_travel_unlocked') !== '1') return;
+  const h=['申請日','氏名','役職','実施日','出張種類','宿泊日数','活動場所','活動内容','出発地','交通手段','交通費','宿泊費','日当','報酬','合計','備考'];
+  const rows=travels.map(r=>[r.submitted,r.name,r.role,r.trip_date,r.trip_type,r.nights,r.venue,r.activity,r.departure,r.transport,r.transport_fee,r.lodging_fee,r.allowance,r.reward,r.total,r.notes].map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(','));
+  dl('﻿'+[h.join(','),...rows].join('\n'), `旅費申請_${td()}.csv`);
+}
+function dl(c,f){const b=new Blob([c],{type:'text/csv'});const u=URL.createObjectURL(b);const a=Object.assign(document.createElement('a'),{href:u,download:f});a.click();URL.revokeObjectURL(u);}
+function td(){return new Date().toLocaleDateString('ja-JP').replace(/\//g,'');}
+
+// ── DASHBOARD ──
+function renderDashboard(){
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  const tc=dark?'#D8EEF8':'#1A2B3C', mc=dark?'#6A9AB8':'#5A7A96', gc=dark?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)', bg=dark?'#112030':'#fff';
+
+  const tA=entries.reduce((s,r)=>s+r.adults,0), tC=entries.reduce((s,r)=>s+r.children,0), tP=tA+tC;
+  const pC=entries.filter(r=>r.paid==='有償').length, fC=entries.length-pC;
+  document.getElementById('kpi-total').textContent=entries.length.toLocaleString();
+  document.getElementById('kpi-part').textContent=tP.toLocaleString();
+  document.getElementById('kpi-part-sub').textContent=`大人 ${tA.toLocaleString()}人 / 子供 ${tC.toLocaleString()}人`;
+  document.getElementById('kpi-paid').textContent=pC;
+  document.getElementById('kpi-paid-sub').textContent=`件（無償 ${fC}件）`;
+  document.getElementById('kpi-avg').textContent=entries.length?Math.round(tP/entries.length):0;
+
+  const axs=(extra={})=>({x:{ticks:{color:mc,font:{size:11}},grid:{color:gc},...extra.x},y:{ticks:{color:mc,font:{size:11},precision:0},grid:{color:gc},beginAtZero:true,...extra.y}});
+
+  const mo={};entries.forEach(r=>{if(r.date){const k=r.date.slice(0,7);mo[k]=(mo[k]||0)+1;}});
+  const mk=Object.keys(mo).sort().slice(-12);
+  mk_(  'c-monthly','bar',{labels:mk.map(k=>k.replace('-','/')),datasets:[{label:'実施回数',data:mk.map(k=>mo[k]),backgroundColor:'rgba(0,119,200,.75)',borderColor:'#0077C8',borderWidth:1,borderRadius:6}]},{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.y} 回`}}},scales:axs()});
+
+  mk_('c-paid','doughnut',{labels:['無償','有償'],datasets:[{data:[fC,pC],backgroundColor:['rgba(0,119,200,.85)','rgba(255,107,43,.85)'],borderColor:bg,borderWidth:4,hoverOffset:8}]},{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:tc,font:{size:12},padding:14,boxWidth:12}}},cutout:'62%'});
+
+  const mp={};entries.forEach(r=>{if(!r.date)return;const k=r.date.slice(0,7);if(!mp[k])mp[k]={a:0,c:0};mp[k].a+=r.adults;mp[k].c+=r.children;});
+  const pk=Object.keys(mp).sort().slice(-12);
+  mk_('c-part','line',{labels:pk.map(k=>k.replace('-','/')),datasets:[{label:'大人',data:pk.map(k=>mp[k].a),borderColor:'#0077C8',backgroundColor:'rgba(0,119,200,.12)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#0077C8'},{label:'子供',data:pk.map(k=>mp[k].c),borderColor:'#22B855',backgroundColor:'rgba(34,184,85,.12)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#22B855'}]},{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:tc,font:{size:12},padding:12,boxWidth:12}}},scales:axs()});
+
+  const lc={};entries.forEach(r=>{lc[r.location]=(lc[r.location]||0)+1;});
+  const t5=Object.entries(lc).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  mk_('c-loc','bar',{labels:t5.map(([l])=>l.length>14?l.slice(0,14)+'…':l),datasets:[{label:'回数',data:t5.map(([,c])=>c),backgroundColor:['rgba(0,119,200,.85)','rgba(34,184,85,.85)','rgba(255,107,43,.85)','rgba(107,68,232,.85)','rgba(236,72,153,.85)'],borderRadius:6}]},{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:mc,font:{size:11},precision:0},grid:{color:gc},beginAtZero:true},y:{ticks:{color:tc,font:{size:12}}}}});
+}
+function mk_(id,type,data,options){if(CR[id])CR[id].destroy();CR[id]=new Chart(document.getElementById(id),{type,data,options});}
+
+// ── HELPERS ──
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
+
+init();
+</script>
+</body>
+</html>
