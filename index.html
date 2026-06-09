@@ -112,6 +112,8 @@ select option{background:var(--surface);color:var(--text)}
 .rl{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--text);font-weight:500}
 .rl input[type=radio]{accent-color:var(--primary);width:16px;height:16px}
 .hint{font-size:11px;color:var(--muted);margin-top:3px}
+.invoice-chip{display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--text2);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.invoice-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px}
 
 /* ── INFO BOX ── */
 .ibox{background:var(--blue-light);border:1px solid rgba(0,119,200,.3);border-radius:12px;padding:14px 18px;margin-bottom:16px;font-size:13px;display:flex;gap:10px;align-items:flex-start}
@@ -386,7 +388,7 @@ tr:hover td{background:var(--surface2)}
   </div>
   <nav class="sb-nav">
     <div class="nav-item active" onclick="showTab(this,'dashboard')" data-tab="dashboard"><span class="ni-icon">📊</span><span class="ni-lbl">ダッシュボード</span></div>
-    <div class="nav-item" onclick="showTab(this,'entry')" data-tab="entry"><span class="ni-icon">✏️</span><span class="ni-lbl">データ入力</span></div>
+    <div class="nav-item" onclick="showTab(this,'entry')" data-tab="entry"><span class="ni-icon">✏️</span><span class="ni-lbl">講習会データ入力</span></div>
     <div class="nav-item" onclick="showTab(this,'list')" data-tab="list"><span class="ni-icon">📋</span><span class="ni-lbl">データ一覧</span></div>
     <div class="nav-item" onclick="showTab(this,'travel')" data-tab="travel"><span class="ni-icon">🚃</span><span class="ni-lbl">旅費・交通費・日当申請</span></div>
     <div class="nav-item" onclick="showTab(this,'items')" data-tab="items"><span class="ni-icon">📦</span><span class="ni-lbl">物品管理</span></div>
@@ -413,7 +415,7 @@ tr:hover td{background:var(--surface2)}
   <div class="qnav-grid">
     <div class="qnav-card" onclick="jumpTab('entry')">
       <div class="qnav-icon">✏️</div>
-      <div><div class="qnav-lbl">データ入力</div><div class="qnav-desc">講習・イベントの実施記録</div></div>
+      <div><div class="qnav-lbl">講習会データ入力</div><div class="qnav-desc">講習・イベントの実施記録</div></div>
     </div>
     <div class="qnav-card" onclick="jumpTab('list')">
       <div class="qnav-icon">📋</div>
@@ -449,21 +451,38 @@ tr:hover td{background:var(--surface2)}
 <!-- ===== DATA ENTRY ===== -->
 <div class="tab-panel" id="tab-entry">
   <div class="card">
-    <div class="sec-head"><div class="sec-bar"></div><div><div class="sec-ttl">新規活動データ入力</div><div class="sec-sub">講習・イベントの実施記録</div></div></div>
+    <div class="sec-head"><div class="sec-bar"></div><div><div class="sec-ttl">講習会データ入力</div><div class="sec-sub">講習・イベントの実施記録（有償の場合は収支計算へ自動連携）</div></div></div>
     <div class="edit-banner" id="editBanner">
       ✏️ 修正モード：データを編集中です
       <button type="button" onclick="cancelEdit()">キャンセル</button>
     </div>
     <form id="entryForm" onsubmit="saveEntry(event)">
       <div class="fg">
+        <div class="fgrp"><label>GOODLUCK担当者</label><input type="text" name="gl_staff" placeholder="例：山田 太郎"></div>
         <div class="fgrp"><label>実施日 <span class="req">*</span></label><input type="date" name="date" required></div>
+        <div class="fgrp"><label>開催地域</label><input type="text" name="region" placeholder="例：大阪府大阪市"></div>
         <div class="fgrp"><label>開催場所 <span class="req">*</span></label><input type="text" name="location" placeholder="例：大阪市立○○中学校" required></div>
         <div class="fgrp"><label>主催 / 依頼元 <span class="req">*</span></label><input type="text" name="organizer" placeholder="例：○○市教育委員会" required></div>
         <div class="fgrp"><label>依頼元の連絡先</label><input type="text" name="contact" placeholder="例：06-1234-5678 / tanaka@example.com"></div>
-        <div class="fgrp"><label>担当者</label><input type="text" name="staff" placeholder="例：山田 太郎、鈴木 花子"></div>
+        <div class="fgrp"><label>依頼元の担当者</label><input type="text" name="staff" placeholder="例：山田 太郎、鈴木 花子"></div>
         <div class="fgrp"><label>参加人数（大人）</label><input type="number" name="adults" min="0" value="0"></div>
         <div class="fgrp"><label>参加人数（子供）</label><input type="number" name="children" min="0" value="0"></div>
-        <div class="fgrp"><label>区分</label><div class="radio-row"><label class="rl"><input type="radio" name="paid" value="無償" checked> 無償</label><label class="rl"><input type="radio" name="paid" value="有償"> 有償</label></div></div>
+        <div class="fgrp"><label>区分</label><div class="radio-row"><label class="rl"><input type="radio" name="paid" value="無償" checked onchange="togglePaidAmount()"> 無償</label><label class="rl"><input type="radio" name="paid" value="有償" onchange="togglePaidAmount()"> 有償</label></div></div>
+        <div class="fgrp" id="paidAmtGrp" style="display:none">
+          <label>講習料・参加費（円）<span class="req">*</span></label>
+          <input type="number" name="paid_amount" id="paidAmtInput" min="0" placeholder="例：50000">
+          <div class="hint">💡 保存すると「収支計算」に自動で収入として計上されます</div>
+        </div>
+        <div class="fgrp" id="invoiceGrp" style="display:none">
+          <label>請求書の添付</label>
+          <div class="invoice-row">
+            <button type="button" class="btn btn-secondary" style="font-size:13px;padding:6px 14px" onclick="document.getElementById('invoiceFile').click()">📎 ファイルを選択</button>
+            <input type="file" id="invoiceFile" accept="image/*,.pdf" onchange="readInvoiceFile(this)" style="display:none">
+            <span id="invoicePreview" class="invoice-chip" style="display:none"></span>
+            <button type="button" id="invoiceClearBtn" class="btn-sm" onclick="clearInvoice()" style="display:none">✕ 削除</button>
+          </div>
+          <div class="hint">💡 収支計算にも同じファイルが連携されます（PDF・画像に対応）</div>
+        </div>
         <div class="fgrp"><label>所要時間</label><input type="text" name="duration" placeholder="例：90分"></div>
         <div class="fgrp full">
           <label>講習内容</label>
@@ -479,7 +498,16 @@ tr:hover td{background:var(--surface2)}
           </div>
           <input type="text" name="lecture_other" id="lecOther" class="lec-other-input" placeholder="その他の講習内容を入力してください">
         </div>
-        <div class="fgrp full"><label>使用教材</label><input type="text" name="materials" placeholder="例：テキストA、AEDトレーナー"></div>
+        <div class="fgrp full">
+          <label>使用機材</label>
+          <div class="lec-grid">
+            <label class="chk-lbl"><input type="checkbox" name="equipment_cb" value="AEDトレーナー"> AEDトレーナー</label>
+            <label class="chk-lbl"><input type="checkbox" name="equipment_cb" value="リトルアン人形（成人）"> リトルアン人形（成人）</label>
+            <label class="chk-lbl"><input type="checkbox" name="equipment_cb" value="リトルアン人形（小児）"> リトルアン人形（小児）</label>
+            <label class="chk-lbl"><input type="checkbox" name="equipment_cb" value="リトルアン人形（乳児）"> リトルアン人形（乳児）</label>
+          </div>
+          <input type="text" name="equipment_other" placeholder="その他の機材・教材（自由記入）" style="margin-top:6px">
+        </div>
         <div class="fgrp full"><label>備考</label><textarea name="notes" placeholder="特記事項など"></textarea></div>
       </div>
       <div class="btn-row">
@@ -503,9 +531,9 @@ tr:hover td{background:var(--surface2)}
       <input type="text" class="wide" id="fq" placeholder="🔍 場所・依頼元で検索" oninput="renderTable()">
     </div>
     <div class="tw">
-      <table><thead><tr><th>実施日</th><th>年度</th><th>開催場所</th><th>主催/依頼元</th><th>連絡先</th><th>担当者</th><th>講習内容</th><th>大人</th><th>子供</th><th>合計</th><th>区分</th><th>所要時間</th><th>使用教材</th><th>備考</th><th></th><th></th><th></th></tr></thead>
+      <table><thead><tr><th>実施日</th><th>年度</th><th>GL担当者</th><th>開催地域</th><th>開催場所</th><th>主催/依頼元</th><th>連絡先</th><th>依頼元の担当者</th><th>講習内容</th><th>大人</th><th>子供</th><th>合計</th><th>区分</th><th>所要時間</th><th>使用機材</th><th>備考</th><th></th><th></th><th></th></tr></thead>
       <tbody id="tbody"></tbody></table>
-      <div id="t-empty" class="empty" style="display:none"><div class="ei">📭</div><p>データがありません。「データ入力」から追加してください。</p></div>
+      <div id="t-empty" class="empty" style="display:none"><div class="ei">📭</div><p>データがありません。「講習会データ入力」から追加してください。</p></div>
     </div>
   </div>
 </div>
@@ -729,7 +757,7 @@ tr:hover td{background:var(--surface2)}
   <!-- ── サブタブ ── -->
   <div class="inner-tabs">
     <div class="inner-tab active" onclick="showItemSubTab(this,'assets')">📋 物品管理台帳</div>
-    <div class="inner-tab" onclick="showItemSubTab(this,'stock')">📊 在庫管理</div>
+    <div class="inner-tab" onclick="showItemSubTab(this,'stock')">📊 消耗品在庫管理</div>
   </div>
 
   <!-- ══════════════════════════════════════
@@ -826,23 +854,21 @@ tr:hover td{background:var(--surface2)}
   </div>
 
   <!-- ══════════════════════════════════════
-       在庫管理
+       消耗品在庫管理
   ══════════════════════════════════════ -->
   <div class="inner-pane" id="itab-stock">
 
-    <!-- KPI -->
-    <div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-icon">📦</div><div class="kpi-lbl">登録商品数</div><div class="kpi-val" id="sk-products">0</div><div class="kpi-sub">種類</div></div>
-      <div class="kpi-card"><div class="kpi-icon">⬆</div><div class="kpi-lbl">総入庫数</div><div class="kpi-val" id="sk-in">0</div><div class="kpi-sub">累計</div></div>
-      <div class="kpi-card"><div class="kpi-icon">⬇</div><div class="kpi-lbl">総出庫数</div><div class="kpi-val" id="sk-out">0</div><div class="kpi-sub">累計</div></div>
-      <div class="kpi-card"><div class="kpi-icon">🗄</div><div class="kpi-lbl">現在庫合計</div><div class="kpi-val" id="sk-stock">0</div><div class="kpi-sub">（単位合計）</div></div>
-    </div>
+    <!-- KPI非表示（hidden IDs kept for JS compatibility） -->
+    <span id="sk-products" style="display:none"></span>
+    <span id="sk-in" style="display:none"></span>
+    <span id="sk-out" style="display:none"></span>
+    <span id="sk-stock" style="display:none"></span>
 
     <!-- 入出庫登録フォーム -->
     <div class="card">
       <div class="sec-head"><div class="sec-bar"></div><div><div class="sec-ttl">入出庫記録</div><div class="sec-sub">商品の入庫・出庫を登録する</div></div></div>
       <div class="edit-banner" id="stockEditBanner">
-        ✏️ 修正モード：在庫データを編集中です
+        ✏️ 修正モード：消耗品在庫データを編集中です
         <button type="button" onclick="cancelStockEdit()">キャンセル</button>
       </div>
       <form id="stockForm" onsubmit="saveStockTxn(event)">
@@ -884,7 +910,7 @@ tr:hover td{background:var(--surface2)}
             <div class="fgrp"><label>日付 <span class="req">*</span></label><input type="date" name="sdate" required></div>
             <div class="fgrp"><label>入庫数</label><input type="number" name="sin_qty" min="0" value="0" id="sinQty" oninput="updateStockPreview()"></div>
             <div class="fgrp"><label>出庫数</label><input type="number" name="sout_qty" min="0" value="0" id="soutQty" oninput="updateStockPreview()"></div>
-            <div class="fgrp"><label>現在庫数（自動計算）</label><input type="number" id="scurrentStock" readonly placeholder="—"></div>
+            <div class="fgrp" style="display:none"><label>現在庫数（自動計算）</label><input type="number" id="scurrentStock" readonly placeholder="—"></div>
             <div class="fgrp full"><label>備考</label><input type="text" name="snotes" placeholder="入出庫の理由・備考など"></div>
           </div>
         </div>
@@ -983,7 +1009,7 @@ tr:hover td{background:var(--surface2)}
     </div>
     <div class="balance-bar" id="balance-bar"></div>
     <div class="tw">
-      <table><thead><tr><th>日付</th><th>種別</th><th>科目</th><th>金額</th><th>摘要</th><th>備考</th><th></th><th></th></tr></thead>
+      <table><thead><tr><th>日付</th><th>種別</th><th>科目</th><th>金額</th><th>摘要</th><th>備考</th><th>添付</th><th></th><th></th></tr></thead>
       <tbody id="fin-tbody"></tbody></table>
       <div id="fin-empty" class="empty" style="display:none"><div class="ei">💴</div><p>収支データがありません。</p></div>
     </div>
@@ -1036,7 +1062,7 @@ function applyTheme(t) {
 }
 
 // ── SIDEBAR ──
-const PAGE_TITLES = {dashboard:'ダッシュボード',entry:'データ入力',list:'データ一覧',travel:'旅費・交通費・日当申請',items:'物品管理',finance:'収支計算'};
+const PAGE_TITLES = {dashboard:'ダッシュボード',entry:'講習会データ入力',list:'データ一覧',travel:'旅費・交通費・日当申請',items:'物品管理',finance:'収支計算'};
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('sbOverlay').classList.toggle('show');
@@ -1093,6 +1119,53 @@ function toggleLecOther(cb) {
 
 // ── ENTRY FORM ──
 let editingId = null;
+let pendingInvoice = null;
+
+function readInvoiceFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    pendingInvoice = { name: file.name, type: file.type, data: e.target.result };
+    const prev = document.getElementById('invoicePreview');
+    const btn  = document.getElementById('invoiceClearBtn');
+    if (prev) { prev.textContent = '📎 ' + file.name; prev.style.display = 'inline-flex'; }
+    if (btn)  btn.style.display = 'inline-block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearInvoice() {
+  pendingInvoice = null;
+  const fi = document.getElementById('invoiceFile');
+  if (fi) fi.value = '';
+  const prev = document.getElementById('invoicePreview');
+  const btn  = document.getElementById('invoiceClearBtn');
+  if (prev) { prev.textContent = ''; prev.style.display = 'none'; }
+  if (btn)  btn.style.display = 'none';
+}
+
+function viewInvoice(id) {
+  const rec = finances.find(f => f.id === id) || entries.find(e => e.id === id);
+  if (!rec || !rec.invoice) return;
+  const win = window.open('', '_blank');
+  if (!win) { alert('ポップアップがブロックされました。ブラウザの設定を確認してください。'); return; }
+  if (rec.invoice.type === 'application/pdf') {
+    win.document.write(`<!DOCTYPE html><html><body style="margin:0"><iframe src="${rec.invoice.data}" style="width:100%;height:100vh;border:none"></iframe></body></html>`);
+  } else {
+    win.document.write(`<!DOCTYPE html><html><body style="margin:0;background:#111;display:flex;justify-content:center;align-items:flex-start"><img src="${rec.invoice.data}" style="max-width:100%"></body></html>`);
+  }
+  win.document.close();
+}
+
+function togglePaidAmount() {
+  const isPaid = document.querySelector('input[name="paid"]:checked')?.value === '有償';
+  const grp    = document.getElementById('paidAmtGrp');
+  const invGrp = document.getElementById('invoiceGrp');
+  if (grp)    grp.style.display    = isPaid ? 'flex' : 'none';
+  if (invGrp) invGrp.style.display = isPaid ? 'flex' : 'none';
+  if (!isPaid) clearInvoice();
+}
 
 function saveEntry(e) {
   e.preventDefault();
@@ -1101,28 +1174,73 @@ function saveEntry(e) {
   const lecVals = fd.getAll('lectures');
   const lecOther = fd.get('lecture_other').trim();
   const lectures = lecVals.map(v => v === 'その他' && lecOther ? `その他（${lecOther}）` : v);
+  const isPaid = fd.get('paid') === '有償';
+  const paidAmount = isPaid ? (+fd.get('paid_amount') || 0) : 0;
+  const equipCbs = fd.getAll('equipment_cb');
+  const equipOther = (fd.get('equipment_other') || '').trim();
+  const materialsArr = [...equipCbs, ...(equipOther ? [equipOther] : [])];
   const data = {
-    date, year:calcFY(date),
-    location:fd.get('location').trim(), organizer:fd.get('organizer').trim(),
-    contact:fd.get('contact').trim(), staff:fd.get('staff').trim(),
+    date, year: calcFY(date),
+    gl_staff: (fd.get('gl_staff') || '').trim(),
+    region: (fd.get('region') || '').trim(),
+    location: fd.get('location').trim(),
+    organizer: fd.get('organizer').trim(),
+    contact: fd.get('contact').trim(),
+    staff: fd.get('staff').trim(),
     lectures,
-    adults:+fd.get('adults')||0, children:+fd.get('children')||0,
-    paid:fd.get('paid'), duration:fd.get('duration').trim(),
-    materials:fd.get('materials').trim(), notes:fd.get('notes').trim()
+    adults: +fd.get('adults') || 0,
+    children: +fd.get('children') || 0,
+    paid: fd.get('paid'),
+    paid_amount: paidAmount,
+    invoice: pendingInvoice || null,
+    duration: fd.get('duration').trim(),
+    materials: materialsArr.join('、'),
+    notes: fd.get('notes').trim()
   };
+  let savedId;
   if (editingId !== null) {
+    savedId = editingId;
     const idx = entries.findIndex(r => r.id === editingId);
     if (idx !== -1) entries[idx] = { ...entries[idx], ...data };
     toast('データを修正しました ✓');
     cancelEdit();
   } else {
-    entries.unshift({ id:Date.now(), ...data });
+    savedId = Date.now();
+    entries.unshift({ id: savedId, ...data });
     toast('データを保存しました ✓');
   }
   localStorage.setItem('gl_entries', JSON.stringify(entries));
+  syncEntryToFinance(savedId, data);
+  clearInvoice();
   e.target.reset();
   document.getElementById('lecOther').style.display = 'none';
+  document.getElementById('paidAmtGrp').style.display = 'none';
+  document.getElementById('invoiceGrp').style.display = 'none';
   renderDashboard(); renderTable();
+}
+
+function syncEntryToFinance(entryId, data) {
+  const existingIdx = finances.findIndex(f => f.from_entry === entryId);
+  if (data.paid === '有償' && data.paid_amount > 0) {
+    const finData = {
+      date: data.date,
+      type: '収入',
+      category: '講習料・参加費',
+      amount: data.paid_amount,
+      summary: data.organizer,
+      notes: '講習会データより自動連携',
+      from_entry: entryId,
+      invoice: data.invoice || null
+    };
+    if (existingIdx !== -1) {
+      finances[existingIdx] = { ...finances[existingIdx], ...finData };
+    } else {
+      finances.unshift({ id: Date.now() + 1, ...finData });
+    }
+  } else {
+    if (existingIdx !== -1) finances.splice(existingIdx, 1);
+  }
+  localStorage.setItem('gl_finances', JSON.stringify(finances));
 }
 
 function editEntry(id) {
@@ -1136,7 +1254,10 @@ function editEntry(id) {
   // フォームに値をセット
   const f = document.getElementById('entryForm');
   f.reset();
+  clearInvoice();
+  f.querySelector('input[name="gl_staff"]').value = r.gl_staff || '';
   f.querySelector('input[name="date"]').value = r.date;
+  f.querySelector('input[name="region"]').value = r.region || '';
   f.querySelector('input[name="location"]').value = r.location;
   f.querySelector('input[name="organizer"]').value = r.organizer;
   f.querySelector('input[name="contact"]').value = r.contact || '';
@@ -1144,8 +1265,24 @@ function editEntry(id) {
   f.querySelector('input[name="adults"]').value = r.adults;
   f.querySelector('input[name="children"]').value = r.children;
   f.querySelectorAll('input[name="paid"]').forEach(rb => rb.checked = rb.value === r.paid);
+  const paidAmtInp = document.getElementById('paidAmtInput');
+  if (paidAmtInp) paidAmtInp.value = r.paid_amount || '';
+  togglePaidAmount();
+  // 請求書添付の復元
+  if (r.invoice) {
+    pendingInvoice = r.invoice;
+    const prev = document.getElementById('invoicePreview');
+    const btn  = document.getElementById('invoiceClearBtn');
+    if (prev) { prev.textContent = '📎 ' + r.invoice.name; prev.style.display = 'inline-flex'; }
+    if (btn)  btn.style.display = 'inline-block';
+  }
   f.querySelector('input[name="duration"]').value = r.duration || '';
-  f.querySelector('input[name="materials"]').value = r.materials || '';
+  // 使用機材チェックボックス復元
+  const EQUIP_PRESETS = ['AEDトレーナー','リトルアン人形（成人）','リトルアン人形（小児）','リトルアン人形（乳児）'];
+  const matArr = (r.materials || '').split('、').map(s => s.trim()).filter(Boolean);
+  f.querySelectorAll('input[name="equipment_cb"]').forEach(cb => { cb.checked = matArr.includes(cb.value); });
+  const otherParts = matArr.filter(s => !EQUIP_PRESETS.includes(s));
+  f.querySelector('input[name="equipment_other"]').value = otherParts.join('、');
   f.querySelector('textarea[name="notes"]').value = r.notes || '';
   // チェックボックス（その他を分離）
   const lecOtherInput = document.getElementById('lecOther');
@@ -1175,6 +1312,11 @@ function cancelEdit() {
   editingId = null;
   document.getElementById('editBanner').classList.remove('show');
   document.getElementById('submitBtn').textContent = '💾 保存する';
+  const grp = document.getElementById('paidAmtGrp');
+  if (grp) grp.style.display = 'none';
+  const invGrp = document.getElementById('invoiceGrp');
+  if (invGrp) invGrp.style.display = 'none';
+  clearInvoice();
 }
 
 // ── TRAVEL FORM: UI ──
@@ -1332,6 +1474,8 @@ function renderTable() {
     return `<tr>
       <td>${r.date}</td>
       <td>${r.year||calcFY(r.date)}</td>
+      <td>${esc(r.gl_staff)||'—'}</td>
+      <td>${esc(r.region)||'—'}</td>
       <td>${esc(r.location)}</td>
       <td>${esc(r.organizer)}</td>
       <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis" title="${esc(r.contact)}">${esc(r.contact)||'—'}</td>
@@ -1350,7 +1494,16 @@ function renderTable() {
     </tr>`;
   }).join('');
 }
-function delEntry(id){if(!confirm('削除しますか？'))return;entries=entries.filter(r=>r.id!==id);localStorage.setItem('gl_entries',JSON.stringify(entries));renderTable();renderDashboard();}
+function delEntry(id) {
+  if (!confirm('削除しますか？\n（有償の場合、連携済みの収支データも同時に削除されます）')) return;
+  entries = entries.filter(r => r.id !== id);
+  localStorage.setItem('gl_entries', JSON.stringify(entries));
+  // 連携済み収支データを削除
+  const before = finances.length;
+  finances = finances.filter(f => f.from_entry !== id);
+  if (finances.length !== before) localStorage.setItem('gl_finances', JSON.stringify(finances));
+  renderTable(); renderDashboard();
+}
 
 // ── PREFILL TRAVEL FROM ENTRY ──
 function prefillTravel(id) {
@@ -1428,8 +1581,8 @@ function delTravel(id){if(!confirm('削除しますか？'))return;travels=trave
 
 // ── CSV ──
 function exportCSV(){
-  const h=['実施日','年度','開催場所','主催/依頼元','依頼元の連絡先','担当者','講習内容','大人','子供','合計','区分','所要時間','使用教材','備考'];
-  const rows=entries.map(r=>[r.date,r.year||calcFY(r.date),r.location,r.organizer,r.contact||'',r.staff||'',(r.lectures||[]).join('・'),r.adults,r.children,r.adults+r.children,r.paid,r.duration,r.materials,r.notes].map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(','));
+  const h=['実施日','年度','GL担当者','開催地域','開催場所','主催/依頼元','依頼元の連絡先','依頼元の担当者','講習内容','大人','子供','合計','区分','所要時間','使用機材','備考'];
+  const rows=entries.map(r=>[r.date,r.year||calcFY(r.date),r.gl_staff||'',r.region||'',r.location,r.organizer,r.contact||'',r.staff||'',(r.lectures||[]).join('・'),r.adults,r.children,r.adults+r.children,r.paid,r.duration,r.materials||'',r.notes||''].map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(','));
   dl('﻿'+[h.join(','),...rows].join('\n'), `活動データ_${td()}.csv`);
 }
 function exportTravelCSV(){
@@ -1580,7 +1733,7 @@ function renderSceneSummary() {
   if (!el) return;
   const activeScene = document.getElementById('iScene') ? document.getElementById('iScene').value : '';
   el.innerHTML = SCENE_DEF
-    .filter(s => cnt[s.key] > 0)
+    .filter(s => cnt[s.key] > 0 && s.key !== '未設定')
     .map(s => `<div class="scene-card${activeScene === s.key ? ' scene-active' : ''}" onclick="filterByScene('${s.key}')">
       <div class="scene-icon">${s.icon}</div>
       <div class="scene-lbl">${s.key}</div>
@@ -1642,7 +1795,7 @@ function exportItemCSV(){
 }
 
 // ══════════════════════════════════════════
-// ── 在庫管理 ──
+// ── 消耗品在庫管理 ──
 // ══════════════════════════════════════════
 let stockTxns = JSON.parse(localStorage.getItem('gl_stock_txns') || '[]');
 let editingStockId = null;
@@ -1966,16 +2119,29 @@ function renderFinList() {
   const empty = document.getElementById('fin-empty');
   if (!data.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display='none';
-  tbody.innerHTML = data.map(r => `<tr>
-    <td>${r.date}</td>
-    <td><span class="badge ${r.type==='収入'?'b-income':'b-expense'}">${r.type}</span></td>
-    <td>${esc(r.category)}</td>
-    <td style="text-align:right;font-weight:700;color:${r.type==='収入'?'var(--blue)':'var(--orange)'}">¥${r.amount.toLocaleString()}</td>
-    <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis" title="${esc(r.summary)}">${esc(r.summary)||'—'}</td>
-    <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis" title="${esc(r.notes)}">${esc(r.notes)||'—'}</td>
-    <td><button class="btn-edit" onclick="editFin(${r.id})">✏️ 修正</button></td>
-    <td><button class="btn-sm" onclick="delFin(${r.id})">削除</button></td>
-  </tr>`).join('');
+  tbody.innerHTML = data.map(r => {
+    const isLinked = !!r.from_entry;
+    const linkedBadge = isLinked
+      ? `<span class="badge" style="background:var(--purple-light);color:var(--purple);font-size:10px;margin-left:5px;vertical-align:middle">🔗 講習連携</span>`
+      : '';
+    const invoiceCell = r.invoice
+      ? `<td style="text-align:center"><button type="button" class="btn-sm" onclick="viewInvoice(${r.id})" title="${esc(r.invoice.name)}">📎 表示</button></td>`
+      : `<td style="text-align:center;color:var(--muted)">—</td>`;
+    const actionBtns = isLinked
+      ? `<td colspan="2"><span style="font-size:11px;color:var(--muted)">講習会データより自動計上</span></td>`
+      : `<td><button class="btn-edit" onclick="editFin(${r.id})">✏️ 修正</button></td>
+         <td><button class="btn-sm" onclick="delFin(${r.id})">削除</button></td>`;
+    return `<tr${isLinked ? ' style="background:var(--purple-light)"' : ''}>
+      <td>${r.date}</td>
+      <td><span class="badge ${r.type==='収入'?'b-income':'b-expense'}">${r.type}</span></td>
+      <td>${esc(r.category)}${linkedBadge}</td>
+      <td style="text-align:right;font-weight:700;color:${r.type==='収入'?'var(--blue)':'var(--orange)'}">¥${r.amount.toLocaleString()}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis" title="${esc(r.summary)}">${esc(r.summary)||'—'}</td>
+      <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis" title="${esc(r.notes)}">${esc(r.notes)||'—'}</td>
+      ${invoiceCell}
+      ${actionBtns}
+    </tr>`;
+  }).join('');
 }
 
 function exportFinCSV(){
